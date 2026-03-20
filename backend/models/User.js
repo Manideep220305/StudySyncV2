@@ -27,9 +27,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: 'default-avatar.png' // You'll link this to Cloudinary later
     },
-    points:{
+    totalPoints:{
         type: Number,
-        default: 0 // for the 'ranking engine' feature
+        default: 0,
+        index: true // for fast leaderboard sorting
     },
     bio:{
         type: String,

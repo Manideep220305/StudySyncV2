@@ -102,8 +102,23 @@ const logoutUser = (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 };
 
+// --- GET ME (Current User Profile) ---
+const getMe = async (req, res) => {
+    try {
+        // req.user is set by the protect middleware
+        if (!req.user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.status(200).json(req.user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     logoutUser,
+    getMe,
 };

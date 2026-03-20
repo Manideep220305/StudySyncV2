@@ -66,3 +66,119 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+  Custom dashboard scrollbar that blends with the dark glassmorphism palette.
+  Apply via className="blend-scrollbar" on any overflow container.
+*/
+.blend-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) rgba(15, 23, 42, 0.35);
+}
+
+.blend-scrollbar::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.blend-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.28);
+  border-radius: 9999px;
+}
+
+.blend-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(51, 65, 85, 0.88), rgba(30, 41, 59, 0.88));
+  border: 1px solid rgba(100, 116, 139, 0.35);
+  border-radius: 9999px;
+}
+
+.blend-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(71, 85, 105, 0.95), rgba(51, 65, 85, 0.95));
+}
+
+.blend-scrollbar-nebula {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(59, 130, 246, 0.85) rgba(2, 6, 23, 0.4);
+}
+
+.blend-scrollbar-nebula::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+.blend-scrollbar-nebula::-webkit-scrollbar-track {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(14, 116, 144, 0.2), transparent 70%),
+    rgba(2, 6, 23, 0.32);
+  border-radius: 9999px;
+}
+
+.blend-scrollbar-nebula::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.9), rgba(37, 99, 235, 0.85));
+  border: 1px solid rgba(147, 197, 253, 0.45);
+  border-radius: 9999px;
+}
+
+.blend-scrollbar-nebula::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.78), rgba(37, 99, 235, 0.7));
+}
+
+@keyframes neonDrift {
+  0% {
+    transform: translate3d(-2%, -3%, 0) scale(1);
+    opacity: 0.28;
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0) scale(1.05);
+    opacity: 0.48;
+  }
+  100% {
+    transform: translate3d(-1%, -2%, 0) scale(1);
+    opacity: 0.3;
+  }
+}
+
+@keyframes laserSweep {
+  0% {
+    transform: translateX(-70%);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.85;
+  }
+  55% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateX(130%);
+    opacity: 0;
+  }
+}
+
+.animate-neon-drift {
+  animation: neonDrift 8s ease-in-out infinite;
+}
+
+.rooms-glass-pulse {
+  position: relative;
+  overflow: hidden;
+}
+
+.rooms-glass-pulse::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -65%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(125, 211, 252, 0.04) 25%,
+    rgba(56, 189, 248, 0.16) 45%,
+    rgba(96, 165, 250, 0.1) 62%,
+    transparent 100%
+  );
+  animation: laserSweep 4.8s ease-in-out infinite;
+  pointer-events: none;
+}
