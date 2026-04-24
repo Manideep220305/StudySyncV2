@@ -34,6 +34,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 frontend/*.txt
+*.md
 analysis_results.md
 problem_stmt.md
 TODO.md
