@@ -6,7 +6,7 @@ import FadeIn from '../components/animations/FadeIn';
 import { GlowingEffect } from '../components/ui/glowing-effect';
 import { AuroraBackground } from '../components/ui/aurora-background';
 import { Button } from '../components/ui/button';
-import { Trophy, BarChart3, ScanText, Timer, FolderOpen, MessageCircle, Hash, Users, Zap } from 'lucide-react';
+import { Trophy, BarChart3, ScanText, Timer, FolderOpen, MessageCircle, Hash, Users, Zap, Sparkles, FileText, BrainCircuit } from 'lucide-react';
 
 // --- TypeScript: Props for LandingPage ---
 // This tells TypeScript that LandingPage expects a function called onOpenAuth.
@@ -23,33 +23,33 @@ const LandingPage = ({ onOpenAuth }: LandingPageProps) => {
   const features = [
     {
       icon: <MessageCircle size={28} />,
-      title: "Real-Time Chat Rooms",
-      desc: "Dedicated namespaces for MERN, DSA, and System Design. Code snippets retain formatting for collaborative debugging."
+      title: "Real-Time Study Rooms",
+      desc: "Dedicated namespaces for focused study. Chat in real-time and share knowledge with your peers effortlessly."
     },
     {
-      icon: <ScanText size={28} />,
-      title: "AI Note Digitization",
-      desc: "Stop retyping. Snap a photo of your handwriting, and our OCR engine converts it into searchable text instantly."
+      icon: <BrainCircuit size={28} />,
+      title: "AI Quiz Generation",
+      desc: "Instantly generate custom quizzes from your AI-context. Test your knowledge on the fly to reinforce learning."
     },
     {
       icon: <Trophy size={28} />,
       title: "Competitive Leaderboards",
-      desc: "Gamify your grind. Earn XP for every hour focused and compete with your batchmates for the top spot."
-    },
-    {
-      icon: <BarChart3 size={28} />,
-      title: "Deep Analytics",
-      desc: "Visualize your 'Focus Velocity'. Track exactly how many hours you spent on specific subjects this week."
+      desc: "Gamify your grind. Earn points for taking quizzes and staying focused, then compete globally for the top spot."
     },
     {
       icon: <Timer size={28} />,
       title: "Group Focus Timer",
-      desc: "Sync your Pomodoro sessions. When the timer starts, everyone in the room locks in together."
+      desc: "Sync your Pomodoro sessions with the room. When the timer starts, everyone locks in and studies together."
     },
     {
-      icon: <FolderOpen size={28} />,
-      title: "Resource Hub",
-      desc: "A shared repository for previous year papers, PDFs, and project assets. Drag-and-drop sharing for your squad."
+      icon: <ScanText size={28} />,
+      title: "AI Material Analysis",
+      desc: "Connect to the robust RAG backend pipeline. Summarize study materials, extract text, and ask interactive questions."
+    },
+    {
+      icon: <BarChart3 size={28} />,
+      title: "Deep User Analytics",
+      desc: "Visualize your progress. Track your total focus time, active streaks, points gathered, and overall study velocity."
     }
   ];
 
@@ -264,6 +264,59 @@ const LandingPage = ({ onOpenAuth }: LandingPageProps) => {
                       </FadeIn>
                   ))}
               </div>
+          </div>
+        </section>
+
+        {/* --- AI POWERED WORKFLOW SECTION --- */}
+        <section className="py-24 relative z-10 w-full overflow-hidden">
+          {/* Subtle blend background instead of harsh lines */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0f172a]/40 to-transparent pointer-events-none blur-3xl"></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+              <FadeIn className="text-center mb-16" direction="up">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/30 text-blue-300 text-sm mb-6 border border-blue-700/50 backdrop-blur-md">
+                      <Sparkles size={16} className="text-blue-400" />
+                      Powered by Advanced RAG
+                  </div>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white drop-shadow-lg">Supercharge your learning<br/>with Artificial Intelligence.</h2>
+                  <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+                    Take your raw context notes or textbooks and let our FastAPI reasoning engine generate tailored quizzes and summarize key concepts.
+                  </p>
+              </FadeIn>
+              
+              <FadeIn delay={0.2} direction="up" className="max-w-4xl mx-auto">
+                <div className="relative rounded-3xl border border-white/5 bg-slate-900/30 backdrop-blur-xl p-8 md:p-12 shadow-2xl text-center group ring-1 ring-white/5">
+                   <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-3xl pointer-events-none"></div>
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                     <div className="flex flex-col items-center">
+                       <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4 text-blue-300 border border-blue-500/20">
+                         <FolderOpen size={32} strokeWidth={1.5} />
+                       </div>
+                       <h3 className="font-bold text-white text-lg mb-2">1. Feed Context</h3>
+                       <p className="text-slate-400 text-sm leading-relaxed">Provide your notes, PDFs, or code. The RAG pipeline processes it seamlessly.</p>
+                     </div>
+                     <div className="flex flex-col items-center relative">
+                         {/* Connecting line for desktop view */}
+                       <div className="hidden md:block absolute top-[2rem] -left-[50%] w-[100%] h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+                       <div className="hidden md:block absolute top-[2rem] -right-[50%] w-[100%] h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+
+                       <div className="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4 text-purple-300 border border-purple-500/20 relative bg-[#020617] z-10">
+                         <ScanText size={32} strokeWidth={1.5} />
+                       </div>
+                       <h3 className="font-bold text-white text-lg mb-2">2. AI Analysis</h3>
+                       <p className="text-slate-400 text-sm leading-relaxed">Our models extract core concepts, relationships, and weak spots immediately.</p>
+                     </div>
+                     <div className="flex flex-col items-center">
+                       <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mb-4 text-cyan-300 border border-cyan-500/20">
+                         <Trophy size={32} strokeWidth={1.5} />
+                       </div>
+                       <h3 className="font-bold text-white text-lg mb-2">3. Start Quizzing</h3>
+                       <p className="text-slate-400 text-sm leading-relaxed">Get real-time feedback, earn XP points, and dominate the global leaderboard.</p>
+                     </div>
+                   </div>
+                </div>
+              </FadeIn>
           </div>
         </section>
 

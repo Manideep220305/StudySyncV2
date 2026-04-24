@@ -39,6 +39,18 @@ export interface AskResponse {
   }>;
 }
 
+export interface AiHealthResponse {
+  available: boolean;
+  status: 'online' | 'offline' | 'degraded' | 'unknown' | string;
+  service: string;
+  url: string;
+  message: string;
+  checkedAt: string | null;
+  responseTimeMs: number | null;
+  upstreamStatus: number | null;
+  details?: unknown;
+}
+
 const uploadPdf = async (groupId: string, file: File, options?: { replaceContext?: boolean }) => {
   const formData = new FormData();
   formData.append('groupId', groupId);
@@ -64,7 +76,7 @@ const ask = async (groupId: string, question: string) => {
 
 const getAiHealth = async () => {
   const response = await apiClient.get('/ai/health');
-  return unwrapApiData(response.data);
+  return unwrapApiData<AiHealthResponse>(response.data);
 };
 
 const aiService = {

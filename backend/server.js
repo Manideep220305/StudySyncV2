@@ -7,9 +7,22 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const app = require('./app');
 const logger = require('./utils/logger');
+const { validateRequiredEnv } = require('./utils/startupValidation');
+const {
+    refreshAiServiceStatus,
+    getAiHealthCheckIntervalMs,
+} = require('./services/aiHealthService');
 
 // Load environment variables from .env file (MONGO_URI, JWT_SECRET, PORT, etc.)
 dotenv.config();
+
+const validation = validateRequiredEnv();
+if (!validation.ok) {
+    logger.error('startup_validation_failed', {
+        missingEnv: validation.missing,
+    });
+    process.exit(1);
+}
 
 // Async DB connection function — we use async/await for cleaner error handling.
 const connectDB = async () => {
@@ -45,6 +58,27 @@ connectDB().then(() => {
     initSocket(httpServer);
     app.locals.socketInitialized = true;
     app.locals.startedAt = new Date().toISOString();
+
+    refreshAiServiceStatus()
+        .then((status) => {
+            const logLevel = status.available ? 'info' : 'warn';
+            logger[logLevel]('ai_service_probe', {
+                status: status.status,
+                message: status.message,
+                checkedAt: status.checkedAt,
+                responseTimeMs: status.responseTimeMs,
+                url: status.url,
+            });
+        })
+        .catch((error) => {
+            logger.warn('ai_service_probe_failed', { message: error.message });
+        });
+
+    setInterval(() => {
+        refreshAiServiceStatus().catch((error) => {
+            logger.warn('ai_service_probe_failed', { message: error.message });
+        });
+    }, getAiHealthCheckIntervalMs()).unref();
     
     const PORT = process.env.PORT || 5000;
     httpServer.listen(PORT, () => {

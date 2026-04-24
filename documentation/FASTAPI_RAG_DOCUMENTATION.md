@@ -4,14 +4,14 @@ This document explains the FastAPI service in detail.
 
 The goal is simple:
 
-- show what each part of `fastapi-rag/main.py` does
+<!-- - show what each part of `fastapi-rag/main.py` does -->
 - explain how PDF upload works
 - explain how question answering works
 - explain how AI quiz generation works
 - explain how the service connects to Node and ChromaDB
 
 This is written for learning and debugging, not just for architecture overview.
-
+<!--  -->
 ---
 
 ## 1. What This Service Does
@@ -354,6 +354,8 @@ This creates a collection name like:
 studysync_group_<group_id>
 ```
 
+In practice, `<group_id>` is the sanitized output of `sanitize_group_id(group_id)`.
+
 Each group gets its own vector collection.
 
 That means groups do not share PDF context.
@@ -391,9 +393,7 @@ If the PDF is invalid, it raises a `400` error.
 Sometimes models return code fences like:
 
 ```json
-```json
 { ... }
-```
 ```
 
 This function removes that wrapping so the JSON can be parsed cleanly.
@@ -669,6 +669,7 @@ Both of these are in memory:
 - restart the service, and data resets
 - this is okay for the current demo/study setup
 - it is not a long-term production storage strategy
+- if you run multiple FastAPI workers/instances, each one has its own separate in-memory vector state
 
 ### Practical effect
 
@@ -832,4 +833,3 @@ If you want to learn the service properly, read it in this order:
 6. `frontend/src/components/GroupChat.tsx`
 
 That order shows the full path from UI to backend to AI and back.
-

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { faker } from '@faker-js/faker';
 import {
   Activity,
   AlertTriangle,
@@ -67,36 +66,25 @@ const staggerContainer = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.07,
+      staggerChildren: 0.1,
       delayChildren: 0.05,
     },
   },
 };
 
-// Standard upward fade-in variant used by cards and small blocks.
 const fadeItem = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 20 } },
 };
 
-// Full-page ambient background. The dashboard cards are semi-transparent,
-// so this moving aurora gives depth without having to animate every card itself.
 const AuroraLayer: React.FC = () => (
   <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden bg-[#020617]">
     <div
-      className="absolute inset-0 opacity-30 animate-wave-aurora"
+      className="absolute inset-0 opacity-20 animate-wave-aurora"
       style={{
-        backgroundImage: `linear-gradient(
-          to right,
-          transparent 0%,
-          #172554 20%,
-          #1e40af 40%,
-          #2563eb 60%,
-          #172554 80%,
-          transparent 100%
-        )`,
-        backgroundSize: '200% 100%',
-        filter: 'blur(80px)',
+        backgroundImage: `radial-gradient(circle at 15% 50%, rgba(37, 99, 235, 0.15), transparent 25%),
+                          radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%)`,
+        filter: 'blur(100px)',
       }}
     />
   </div>
@@ -115,21 +103,22 @@ interface StatCardProps {
 // Kept generic so adding future stats doesn't duplicate UI styles.
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, accent, iconBg, delay = 0 }) => (
   <motion.div
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.35, delay }}
-    className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md"
+    initial={{ opacity: 0, scale: 0.95, y: 15 }}
+    animate={{ opacity: 1, scale: 1, y: 0 }}
+    transition={{ duration: 0.5, delay, ease: [0.23, 1, 0.32, 1] }}
+    whileHover={{ y: -5, scale: 1.02 }}
+    className="relative overflow-hidden rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-6 shadow-sm backdrop-blur-xl ring-1 ring-white/5 transition-all"
   >
-    <div className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl" style={{ background: accent }} />
+    <div className="absolute inset-x-0 top-0 h-[2px] w-full" style={{ background: accent }} />
     <div
-      className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-2xl opacity-20"
+      className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl opacity-20 transition-opacity group-hover:opacity-40"
       style={{ background: accent }}
     />
-    <div className="flex items-center gap-4">
-      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg} shadow-lg`}>{icon}</div>
+    <div className="flex items-center gap-5">
+      <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconBg} shadow-lg ring-1 ring-white/10`}>{icon}</div>
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
-        <p className="text-2xl font-bold text-white">{value}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+        <p className="mt-1 text-3xl font-extrabold tracking-tight text-white">{value}</p>
       </div>
     </div>
   </motion.div>
@@ -145,13 +134,16 @@ interface TrendCardProps {
 // Small reusable trend tile used in the weekly trend row.
 const TrendCard: React.FC<TrendCardProps> = ({ title, value, subText, positive }) => (
   <motion.div
-    whileHover={{ y: -3, scale: 1.01 }}
-    transition={{ type: 'spring', stiffness: 240, damping: 20 }}
-    className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-md"
+    whileHover={{ y: -4, scale: 1.02 }}
+    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+    className="rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-5 shadow-xl backdrop-blur-xl ring-1 ring-white/5"
   >
-    <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</div>
-    <div className="mt-2 text-2xl font-bold text-white">{value}</div>
-    <div className={`mt-1 text-xs ${positive ? 'text-emerald-300' : 'text-amber-300'}`}>{subText}</div>
+    <div className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">{title}</div>
+    <div className="mt-3 text-3xl font-extrabold tracking-tight text-white">{value}</div>
+    <div className={`mt-2 flex items-center gap-1 text-[13px] font-medium ${positive ? 'text-emerald-400' : 'text-amber-400'}`}>
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${positive ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+      {subText}
+    </div>
   </motion.div>
 );
 
@@ -170,7 +162,7 @@ const ModalShell: React.FC<ModalShellProps> = ({ title, onClose, children }) => 
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: 10 }}
       transition={{ duration: 0.18 }}
-      className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 p-6 shadow-2xl"
+      className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 p-6 shadow-sm"
       onClick={(event) => event.stopPropagation()}
     >
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-blue-500 to-violet-500" />
@@ -287,15 +279,6 @@ const reasonLabel: Record<string, string> = {
   task_resolved: 'Task',
   pomodoro: 'Pomodoro',
   quiz_win: 'Quiz',
-};
-
-const seedFromString = (value: string) => {
-  let hash = 0;
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(index);
-    hash |= 0;
-  }
-  return Math.abs(hash);
 };
 
 export default function Dashboard() {
@@ -422,29 +405,13 @@ export default function Dashboard() {
   }, [profile]);
 
   const missionStripMetrics = useMemo(() => {
-    if (todayMetrics.hasLiveToday) {
-      return {
-        xpToday: todayMetrics.xpToday,
-        pomodoroDone: todayMetrics.pomodoroDone,
-        tasksDone: todayMetrics.tasksDone,
-        source: 'live' as const,
-      };
-    }
-
-    // Show a clearly-marked projection when no events are logged yet today.
-    // This keeps the strip informative without pretending it's real activity data.
-    const projectionSeed = seedFromString(
-      `mission-${user?._id || 'guest'}-${todayMetrics.xpTarget}-${todayMetrics.taskTarget}`
-    );
-    faker.seed(projectionSeed);
-
     return {
-      xpToday: faker.number.int({ min: 24, max: Math.max(30, Math.floor(todayMetrics.xpTarget * 0.45)) }),
-      pomodoroDone: faker.number.int({ min: 1, max: Math.max(1, Math.floor(todayMetrics.pomodoroTarget / 2)) }),
-      tasksDone: faker.number.int({ min: 1, max: Math.max(1, Math.floor(todayMetrics.taskTarget / 2)) }),
-      source: 'projected' as const,
+      xpToday: todayMetrics.xpToday,
+      pomodoroDone: todayMetrics.pomodoroDone,
+      tasksDone: todayMetrics.tasksDone,
+      source: todayMetrics.hasLiveToday ? 'live' as const : 'empty' as const,
     };
-  }, [todayMetrics.hasLiveToday, todayMetrics.pomodoroDone, todayMetrics.pomodoroTarget, todayMetrics.taskTarget, todayMetrics.xpTarget, todayMetrics.xpToday, user?._id]);
+  }, [todayMetrics.hasLiveToday, todayMetrics.pomodoroDone, todayMetrics.tasksDone, todayMetrics.xpToday]);
 
   const priorityTasks = useMemo(() => {
     // Priority Queue score combines age (urgency), XP value (impact), and category weight.
@@ -479,8 +446,8 @@ export default function Dashboard() {
   const finishByEstimate = useMemo(() => {
     // "Finish by" is an estimate: remaining focus load mapped to future clock time.
     // This is a soft planning hint, not a strict deadline.
-    if (missionStripMetrics.source === 'projected') {
-      return 'Start session';
+    if (!todayMetrics.hasLiveToday) {
+      return 'Not started';
     }
 
     const now = new Date();
@@ -494,7 +461,7 @@ export default function Dashboard() {
     const focusMinutes = Math.max(25, (remainingPomodoros + remainingTasks) * 25);
     const finishDate = new Date(now.getTime() + focusMinutes * 60 * 1000);
     return finishDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }, [missionStripMetrics.pomodoroDone, missionStripMetrics.source, missionStripMetrics.tasksDone, todayMetrics.pomodoroTarget, todayMetrics.taskTarget]);
+  }, [missionStripMetrics.pomodoroDone, missionStripMetrics.tasksDone, todayMetrics.hasLiveToday, todayMetrics.pomodoroTarget, todayMetrics.taskTarget]);
 
   const trendMetrics = useMemo(() => {
     // Weekly trend cards compare current 7-day window vs previous 7-day window.
@@ -632,6 +599,10 @@ export default function Dashboard() {
   const focusPlan = useMemo<FocusSession[]>(() => {
     // Focus plan creates practical upcoming sessions anchored to priority tasks.
     // Session count is bounded so the panel remains actionable and not noisy.
+    if (!priorityTasks.length && !todayMetrics.hasLiveToday) {
+      return [];
+    }
+
     const remainingPomodoros = Math.max(0, todayMetrics.pomodoroTarget - todayMetrics.pomodoroDone);
     // IMPORTANT: Focus session count bounds. Keeps planning panel actionable (not too short or noisy).
     const plannedCount = Math.max(4, Math.min(8, remainingPomodoros + 2));
@@ -681,33 +652,44 @@ export default function Dashboard() {
       });
   }, [accuracyTopics]);
 
-  const fakerBriefing = useMemo(() => {
-    const seedKey = `${user?._id || 'guest'}-${todayMetrics.xpToday}-${streak.days}-${priorityTasks.length}`;
-    faker.seed(seedFromString(seedKey));
+  const systemPulse = useMemo(() => {
+    const groupsJoined = profile?.groupsCount ?? 0;
+    const completionProgress = Math.round(
+      ((missionStripMetrics.pomodoroDone + missionStripMetrics.tasksDone) /
+        Math.max(1, todayMetrics.pomodoroTarget + todayMetrics.taskTarget)) * 100
+    );
 
-    const suggestedMinutes = faker.number.int({ min: 35, max: 120 });
-    const teammateName = faker.person.firstName();
-    const teammateFocus = faker.number.int({ min: 58, max: 97 });
-    const confidence = faker.number.int({ min: 62, max: 96 });
+    if (!todayMetrics.hasLiveToday && !priorityTasks.length && groupsJoined === 0) {
+      return {
+        sprintLabel: 'No active session',
+        sprintSummary: 'Create your first task or complete one focus cycle to generate live guidance.',
+        suggestedMinutes: 0,
+        teammateLine: 'Join or create a group to unlock room-based activity signals.',
+        confidence: 0,
+        riskLine: 'No active risk signals yet.',
+        promptQuestion: 'What is the first task you want to finish today?',
+      };
+    }
 
     return {
-      sprintLabel: `${faker.company.buzzNoun()} ${faker.word.adjective()} sprint`,
-      sprintSummary: faker.company.catchPhrase(),
-      suggestedMinutes,
-      teammateLine: `${teammateName} is projected at ${teammateFocus}% focus consistency today.`,
-      riskLine: faker.helpers.arrayElement([
-        'Potential bottleneck: context switching between DSA and development tasks.',
-        'Potential bottleneck: low recovery window between two deep work blocks.',
-        'Potential bottleneck: too many medium-priority tasks competing for early slots.',
-      ]),
-      confidence,
-      promptQuestion: faker.helpers.arrayElement([
-        'Which task can you close in the next 25 minutes?',
-        'What single blocker is slowing your highest-priority quest?',
-        'Can you convert one pending task into a concrete done criterion right now?',
-      ]),
+      sprintLabel: priorityTasks[0]?.title || 'Next focus block',
+      sprintSummary: priorityTasks.length
+        ? 'Your highest-priority pending task is ready for a focused session.'
+        : 'You have activity today, but no pending priority tasks right now.',
+      suggestedMinutes: priorityTasks.length ? 25 : 0,
+      teammateLine:
+        groupsJoined > 0
+          ? `You are currently in ${groupsJoined} group${groupsJoined === 1 ? '' : 's'}.`
+          : 'No study groups joined yet.',
+      confidence: completionProgress,
+      riskLine: priorityTasks.length
+        ? `Main blocker: ${priorityTasks[0].title} is still pending.`
+        : 'No pending blockers detected.',
+      promptQuestion: priorityTasks.length
+        ? 'Can you close your top-priority task in the next 25 minutes?'
+        : 'What is the next concrete action you want to take?',
     };
-  }, [priorityTasks.length, streak.days, todayMetrics.xpToday, user?._id]);
+  }, [missionStripMetrics.pomodoroDone, missionStripMetrics.tasksDone, priorityTasks, profile?.groupsCount, todayMetrics.hasLiveToday, todayMetrics.pomodoroTarget, todayMetrics.taskTarget]);
 
   const handleStartNextSession = () => {
     // Button flow: mark active session in UI -> scroll to timer -> show toast confirmation.
@@ -733,14 +715,14 @@ export default function Dashboard() {
           4) Navigation/action helpers
           5) Trends, radar, and execution tools (timer/tasks)
         */}
-        <div className="relative z-10 flex w-full flex-col gap-8 pb-16">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-10 pb-24 pt-4">
           <motion.div
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             <div className="flex items-baseline gap-3">
-              <h1 className="text-3xl font-bold text-white">
+              <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-sm">
                 Welcome back,{' '}
                 <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">
                   {user?.username || 'Scholar'}
@@ -748,7 +730,7 @@ export default function Dashboard() {
               </h1>
             </div>
             <p className="mt-1 text-sm text-slate-500">
-              Dashboard now focuses on momentum and actions, while chat stays in Rooms.
+              Use Dashboard to plan your day, then open Rooms to create, join, and chat inside study groups.
             </p>
           </motion.div>
 
@@ -791,21 +773,23 @@ export default function Dashboard() {
           </motion.div>
 
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.18 }}
-            className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md"
+            transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+            className="relative overflow-hidden rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5"
           >
+            {/* Subtle mesh background for premium feel */}
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 pointer-events-none mix-blend-overlay"></div>
+            
             {/* Daily mission strip: all cards derive from today's events + adaptive targets. */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between relative z-10">
               <div>
-                <h2 className="text-lg font-bold text-white">Today Mission Strip</h2>
-                <p className="text-sm text-slate-500">Your personal targets and finish estimate for today.</p>
-                {missionStripMetrics.source === 'projected' && (
-                  <p className="mt-1 text-xs text-cyan-300">No points logged today yet - showing faker projection preview.</p>
-                )}
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">Today's Mission</h2>
+                <p className="mt-1 text-sm text-slate-400">Your personal targets and finish estimate for today.</p>
               </div>
-              <CalendarClock className="h-5 w-5 text-cyan-300" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 ring-1 ring-cyan-500/20">
+                <CalendarClock className="h-6 w-6 text-cyan-400" />
+              </div>
             </div>
 
             <motion.div
@@ -813,355 +797,417 @@ export default function Dashboard() {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, amount: 0.25 }}
-              className="grid grid-cols-1 gap-4 md:grid-cols-4"
+              className="grid grid-cols-1 gap-5 md:grid-cols-4 relative z-10"
             >
-              <motion.div variants={fadeItem} whileHover={{ y: -2, scale: 1.01 }} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">XP Target</div>
-                <div className="mt-2 text-xl font-bold text-white">
-                  {missionStripMetrics.xpToday} / {todayMetrics.xpTarget}
+              <motion.div variants={fadeItem} whileHover={{ y: -4, scale: 1.02 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all">
+                <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">XP Target</div>
+                <div className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+                  {missionStripMetrics.xpToday} <span className="text-lg text-slate-500 font-medium">/ {todayMetrics.xpTarget}</span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-800">
+                <div className="mt-4 h-2.5 rounded-full bg-slate-800/80 shadow-inner">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300"
+                    className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
                     style={{ width: `${Math.min(100, (missionStripMetrics.xpToday / todayMetrics.xpTarget) * 100)}%` }}
                   />
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeItem} whileHover={{ y: -2, scale: 1.01 }} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Pomodoros</div>
-                <div className="mt-2 text-xl font-bold text-white">
-                  {missionStripMetrics.pomodoroDone} / {todayMetrics.pomodoroTarget}
+              <motion.div variants={fadeItem} whileHover={{ y: -4, scale: 1.02 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all">
+                <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Pomodoros</div>
+                <div className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+                  {missionStripMetrics.pomodoroDone} <span className="text-lg text-slate-500 font-medium">/ {todayMetrics.pomodoroTarget}</span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-800">
+                <div className="mt-4 h-2.5 rounded-full bg-slate-800/80 shadow-inner">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-300"
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-300 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
                     style={{ width: `${Math.min(100, (missionStripMetrics.pomodoroDone / todayMetrics.pomodoroTarget) * 100)}%` }}
                   />
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeItem} whileHover={{ y: -2, scale: 1.01 }} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tasks</div>
-                <div className="mt-2 text-xl font-bold text-white">
-                  {missionStripMetrics.tasksDone} / {todayMetrics.taskTarget}
+              <motion.div variants={fadeItem} whileHover={{ y: -4, scale: 1.02 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all">
+                <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Tasks</div>
+                <div className="mt-3 text-3xl font-extrabold tracking-tight text-white">
+                  {missionStripMetrics.tasksDone} <span className="text-lg text-slate-500 font-medium">/ {todayMetrics.taskTarget}</span>
                 </div>
-                <div className="mt-2 h-2 rounded-full bg-slate-800">
+                <div className="mt-4 h-2.5 rounded-full bg-slate-800/80 shadow-inner">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-300"
+                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
                     style={{ width: `${Math.min(100, (missionStripMetrics.tasksDone / todayMetrics.taskTarget) * 100)}%` }}
                   />
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeItem} whileHover={{ y: -2, scale: 1.01 }} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">Finish By</div>
-                <div className="mt-2 text-xl font-bold text-white">{finishByEstimate}</div>
-                <p className="mt-2 text-xs text-slate-400">
-                  {missionStripMetrics.source === 'projected'
-                    ? 'Will switch to real estimate after your first tracked action today.'
-                    : 'Estimated from pending focus load'}
+              <motion.div variants={fadeItem} whileHover={{ y: -4, scale: 1.02 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all">
+                <div className="text-[11px] font-bold uppercase tracking-[0.15em] text-slate-400">Finish By</div>
+                <div className="mt-3 text-3xl font-extrabold tracking-tight text-white">{finishByEstimate}</div>
+                <p className="mt-3 text-[11px] leading-relaxed text-slate-400 font-medium">
+                  {todayMetrics.hasLiveToday
+                    ? 'Estimated from pending focus load'
+                    : 'Starts calculating after your first action.'}
                 </p>
               </motion.div>
             </motion.div>
           </motion.section>
 
+          {/* Moved Tasklog up based on user request - Execution Hub */}
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            ref={questSectionRef}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+            transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
+            className="relative w-full rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5"
+          >
+             <div className="mb-6 flex items-baseline justify-between relative z-10">
+                <h2 className="text-2xl font-extrabold text-white tracking-tight">Active Quests & Tasks</h2>
+             </div>
+            <div className="h-[600px] overflow-y-auto blend-scrollbar pr-2 pb-2">
+              <QuestLog />
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.27, ease: 'easeOut' }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-3"
           >
             {/* Priority queue (left) + streak resilience panel (right). */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md lg:col-span-2">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="flex flex-col rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5 lg:col-span-2">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Smart Priority Queue</h2>
-                  <p className="text-sm text-slate-500">Top 3 tasks sorted by urgency and impact.</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Smart Priority Queue</h2>
+                  <p className="mt-1 text-sm text-slate-400">Top 3 tasks sorted by urgency and impact.</p>
                 </div>
-                <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                </div>
               </div>
 
               {priorityTasks.length ? (
-                <div className="space-y-2">
+                <div className="space-y-3 flex-1">
                   {/* Each row shows priority rank + category context + XP impact. */}
                   {priorityTasks.map((task, index) => (
-                    <div key={task._id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                    <motion.div whileHover={{ x: 4 }} key={task._id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 transition-all hover:bg-white/[0.04]">
                       <div>
-                        <div className="text-sm font-semibold text-white">#{index + 1} {task.title}</div>
-                        <div className="mt-1 text-xs text-slate-400">
-                          {task.category || 'Other'} • {task.xpValue ?? 10} XP
+                        <div className="text-base font-semibold text-white">
+                          <span className="mr-2 text-slate-500">#{index + 1}</span>
+                          {task.title}
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-3 text-[11px] font-medium tracking-wider text-slate-400 uppercase">
+                          <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" />{task.category || 'Other'}</span>
+                          <span className="text-amber-400/80">{task.xpValue ?? 10} XP</span>
                         </div>
                       </div>
-                      <div className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs text-emerald-300">
+                      <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 shadow-sm">
                         Priority {Math.round(task.score)}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-white/15 bg-white/5 p-5 text-sm text-slate-400">
+                <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5 p-8 text-sm text-slate-400">
                   No pending tasks. Add new quests to generate your queue.
                 </div>
               )}
 
-              <div className="mt-4">
-                <Button variant="outline" className="border-white/10 bg-white/5 hover:bg-white/10" onClick={() => scrollToSection(questSectionRef)}>
-                  Open task board <ArrowRight className="ml-2 h-4 w-4" />
+              <div className="mt-6">
+                <Button variant="outline" className="w-full sm:w-auto h-11 border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl" onClick={() => scrollToSection(questSectionRef)}>
+                  Open Task Board <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md">
-              <div className="mb-3 flex items-center gap-2">
-                <Flame className="h-4 w-4 text-orange-300" />
-                <h3 className="text-sm font-semibold text-white">Streak + Recovery</h3>
-              </div>
-              <div className="text-3xl font-bold text-white">{streak.days} days</div>
-              <p className="mt-1 text-xs text-slate-400">Consistency streak (based on active days)</p>
-              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
-                <div className="text-xs text-slate-400">Recovery Tokens</div>
-                <div className="mt-1 text-lg font-semibold text-cyan-300">{streak.recoveryTokens}</div>
-                <div className="mt-1 text-[11px] text-slate-500">of {streak.totalTokens} available</div>
-              </div>
-            </div>
-          </motion.section>
-
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.205 }}
-            className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md"
-          >
-            <div className="mb-4 flex items-center justify-between">
+            <div className="flex flex-col justify-between rounded-3xl border border-slate-700/50 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-900/20 via-[#0f172a]/80 to-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5 relative overflow-hidden">
+              <div className="absolute -top-12 -right-12 h-32 w-32 bg-orange-500/20 blur-3xl rounded-full"></div>
               <div>
-                <h2 className="text-lg font-bold text-white">Faker Live Briefing</h2>
-                <p className="text-sm text-slate-500">Extra demo insights generated via faker.js for richer dashboard context.</p>
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400">
+                        <Flame className="h-4 w-4" />
+                    </div>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-white/90">Streak</h3>
+                  </div>
+                  <div className="text-5xl font-extrabold tracking-tighter text-white drop-shadow-md">{streak.days} <span className="text-2xl text-slate-500 font-medium">days</span></div>
+                  <p className="mt-2 text-sm text-slate-400">Consistency streak (active days)</p>
               </div>
-              <Sparkles className="h-5 w-5 text-cyan-300" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Suggested Sprint</p>
-                <p className="mt-2 text-sm font-semibold text-white">{fakerBriefing.sprintLabel}</p>
-                <p className="mt-1 text-xs text-slate-400">{fakerBriefing.sprintSummary}</p>
-                <p className="mt-2 text-xs text-cyan-300">Recommended: {fakerBriefing.suggestedMinutes} min deep block</p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Team Pulse</p>
-                <p className="mt-2 text-sm text-slate-200">{fakerBriefing.teammateLine}</p>
-                <p className="mt-2 text-xs text-emerald-300">Confidence score: {fakerBriefing.confidence}%</p>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Risk Radar</p>
-                <p className="mt-2 text-sm text-amber-200">{fakerBriefing.riskLine}</p>
-                <p className="mt-2 text-xs text-slate-300">{fakerBriefing.promptQuestion}</p>
+              <div className="mt-8 rounded-2xl border border-white/10 bg-black/20 p-5 backdrop-blur-md">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Recovery Tokens</div>
+                <div className="mt-2 flex items-baseline gap-2">
+                    <span className="text-3xl font-extrabold text-cyan-400">{streak.recoveryTokens}</span>
+                    <span className="text-sm font-medium text-slate-500">/ {streak.totalTokens} available</span>
+                </div>
+                <p className="mt-2 text-[10px] leading-relaxed text-slate-500">Used to preserve your streak if you miss a day.</p>
               </div>
             </div>
           </motion.section>
 
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.21 }}
-            className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+            transition={{ duration: 0.5, delay: 0.28, ease: 'easeOut' }}
+            className="rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5"
+          >
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">System Pulse</h2>
+                  <p className="mt-1 text-sm text-slate-400">Live dashboard guidance based on your actual activity.</p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 ring-1 ring-violet-500/20">
+                  <Sparkles className="h-5 w-5 text-violet-400" />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <motion.div whileHover={{ y: -3, scale: 1.01 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all hover:bg-white/[0.04]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Suggested Block</p>
+                <p className="mt-3 text-base font-semibold text-white">{systemPulse.sprintLabel}</p>
+                <p className="mt-1 text-xs leading-relaxed text-slate-400">{systemPulse.sprintSummary}</p>
+                <div className="mt-4 inline-flex items-center rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-400 ring-1 ring-blue-500/20">
+                  <PlayCircle className="mr-2 h-3.5 w-3.5" />
+                  {systemPulse.suggestedMinutes} min deep block
+                </div>
+              </motion.div>
+
+              <motion.div whileHover={{ y: -3, scale: 1.01 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all hover:bg-white/[0.04]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Cohort Momentum</p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-300">{systemPulse.teammateLine}</p>
+                <div className="mt-4 flex items-center gap-2">
+                  <div className="h-1.5 flex-1 rounded-full bg-slate-800">
+                    <div className="h-full rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" style={{ width: `${systemPulse.confidence}%` }}></div>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-400">{systemPulse.confidence}%</span>
+                </div>
+              </motion.div>
+
+              <motion.div whileHover={{ y: -3, scale: 1.01 }} className="rounded-2xl border border-white/5 bg-white/[0.02] p-5 shadow-sm transition-all hover:bg-white/[0.04]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Risk Radar</p>
+                <div className="mt-3 flex items-start gap-2">
+                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                   <p className="text-sm leading-relaxed text-amber-200/90">{systemPulse.riskLine}</p>
+                </div>
+                <p className="mt-3 border-t border-white/5 pt-3 text-xs italic text-slate-400">"{systemPulse.promptQuestion}"</p>
+              </motion.div>
+            </div>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.29, ease: 'easeOut' }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-3"
           >
             {/* Heatmap visualizes long-term consistency; focus plan converts it into next actions. */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md lg:col-span-2">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5 lg:col-span-2">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Consistency Heatmap</h2>
-                  <p className="text-sm text-slate-500">Last 12 weeks of activity intensity.</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">Consistency Heatmap</h2>
+                  <p className="mt-1 text-sm text-slate-400">Last 12 weeks of activity intensity.</p>
                 </div>
-                <Activity className="h-5 w-5 text-emerald-300" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
+                   <Activity className="h-5 w-5 text-emerald-400" />
+                </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto blend-scrollbar pb-2">
                 {/* 7 rows x 12 weeks-ish columns. Cells animate into view for progressive reveal. */}
-                <div className="grid grid-flow-col grid-rows-7 gap-1 min-w-[620px]">
+                <div className="grid grid-flow-col grid-rows-7 gap-1.5 min-w-[620px] pt-2">
                   {heatmapCells.map((cell, idx) => {
                     const levelClass =
                       cell.level === 0
-                        ? 'bg-slate-800/70'
+                        ? 'bg-slate-800/50 border border-white/5'
                         : cell.level === 1
-                          ? 'bg-emerald-900/80'
+                          ? 'bg-emerald-900/60 border border-emerald-800/50'
                           : cell.level === 2
-                            ? 'bg-emerald-700/80'
+                            ? 'bg-emerald-700/70 border border-emerald-600/50'
                             : cell.level === 3
-                              ? 'bg-emerald-500/85'
-                              : 'bg-lime-300/90';
+                              ? 'bg-emerald-500/80 border border-emerald-400/50'
+                              : 'bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.6)]';
                     return (
                       <motion.div
                         key={cell.key}
-                        initial={{ opacity: 0, scale: 0.7 }}
+                        initial={{ opacity: 0, scale: 0.5 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true, amount: 0.35 }}
-                        transition={{ duration: 0.15, delay: Math.min(0.35, idx * 0.004) }}
+                        transition={{ duration: 0.2, delay: Math.min(0.4, idx * 0.005) }}
                         title={cell.label}
-                        className={`h-3.5 w-3.5 rounded-[3px] ${levelClass} shadow-inner`}
+                        className={`h-4 w-4 rounded-sm transition-all hover:scale-125 hover:z-10 ${levelClass}`}
                       />
                     );
                   })}
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-end gap-2 text-[11px] text-slate-500">
+              <div className="mt-5 flex items-center justify-end gap-2 text-[11px] font-medium tracking-wider uppercase text-slate-500">
                 <span>Less</span>
-                <span className="h-2.5 w-2.5 rounded-[2px] bg-slate-800/70" />
-                <span className="h-2.5 w-2.5 rounded-[2px] bg-emerald-900/80" />
-                <span className="h-2.5 w-2.5 rounded-[2px] bg-emerald-700/80" />
-                <span className="h-2.5 w-2.5 rounded-[2px] bg-emerald-500/85" />
-                <span className="h-2.5 w-2.5 rounded-[2px] bg-lime-300/90" />
+                <span className="h-3 w-3 rounded-[2px] bg-slate-800/50 border border-white/5" />
+                <span className="h-3 w-3 rounded-[2px] bg-emerald-900/60 border border-emerald-800/50" />
+                <span className="h-3 w-3 rounded-[2px] bg-emerald-700/70 border border-emerald-600/50" />
+                <span className="h-3 w-3 rounded-[2px] bg-emerald-500/80 border border-emerald-400/50" />
+                <span className="h-3 w-3 rounded-[2px] bg-emerald-300 shadow-sm" />
                 <span>More</span>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Focus Plan</h3>
-                <PlayCircle className="h-4 w-4 text-cyan-300" />
+            <div className="flex flex-col rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 h-40 w-40 bg-cyan-500/10 blur-[50px] pointer-events-none"></div>
+              
+              <div className="mb-6 flex items-center justify-between z-10">
+                <h3 className="text-xl font-bold text-white tracking-tight">Focus Plan</h3>
+                <PlayCircle className="h-5 w-5 text-cyan-400" />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3 flex-1 z-10">
                 {/* Upcoming sessions are generated from current queue + remaining daily target load. */}
-                {focusPlan.slice(0, 5).map((session) => (
-                  <motion.div
-                    key={session.id}
-                    initial={{ opacity: 0, x: 8 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.2 }}
-                    className={`rounded-xl border px-3 py-2 ${
-                      session.status === 'done'
-                        ? 'border-emerald-500/20 bg-emerald-500/10'
-                        : activeSessionId === session.id
-                          ? 'border-cyan-400/50 bg-cyan-500/10 animate-pulse'
-                          : 'border-white/10 bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-xs font-medium text-white truncate">{session.title}</div>
-                      <div className="text-[10px] uppercase tracking-wide text-slate-400">{session.startsAt}</div>
-                    </div>
-                  </motion.div>
-                ))}
+                {focusPlan.length > 0 ? (
+                  focusPlan.slice(0, 5).map((session) => (
+                    <motion.div
+                      key={session.id}
+                      initial={{ opacity: 0, x: 10 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.3 }}
+                      className={`rounded-2xl border px-4 py-3 transition-all ${
+                        session.status === 'done'
+                          ? 'border-emerald-500/20 bg-emerald-500/10 opacity-70'
+                          : activeSessionId === session.id
+                            ? 'border-cyan-400/50 bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                            : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="text-sm font-semibold text-white truncate">{session.title}</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">{session.startsAt}</div>
+                      </div>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-sm text-slate-400">
+                    No focus plan yet. Add a task or start a session to build one.
+                  </div>
+                )}
               </div>
 
-              <Button className="mt-4 w-full bg-cyan-600 hover:bg-cyan-500" onClick={handleStartNextSession}>
+              <Button className="mt-6 w-full h-12 rounded-xl bg-cyan-600 font-bold hover:bg-cyan-500 shadow-lg shadow-cyan-500/20 z-10 transition-transform active:scale-[0.98]" onClick={handleStartNextSession} disabled={!nextSession}>
                 Start Next Session <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </motion.section>
 
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.22 }}
-            className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+            transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-3"
           >
             {/* Compact quick-action nav plus contextual "Now Snapshot". */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md lg:col-span-2">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="flex flex-col rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5 lg:col-span-2">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-bold text-white">One-Click Quick Actions</h2>
-                  <p className="text-sm text-slate-500">Compact shortcuts + immediate context.</p>
+                  <h2 className="text-xl font-bold text-white tracking-tight">One-Click Actions</h2>
+                  <p className="mt-1 text-sm text-slate-400">Compact shortcuts + priority context.</p>
                 </div>
-                <Sparkles className="h-5 w-5 text-cyan-300" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 ring-1 ring-blue-500/20">
+                  <Sparkles className="h-5 w-5 text-blue-400" />
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-                <Button size="sm" className="h-9 justify-between bg-blue-600 px-3 text-xs hover:bg-blue-500" onClick={() => navigate('/rooms')}>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6 mb-6">
+                <Button size="sm" className="h-10 justify-between bg-blue-600 px-4 text-xs font-bold hover:bg-blue-500 shadow-md shadow-blue-500/20" onClick={() => navigate('/rooms')}>
                   Rooms <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-9 justify-between border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10" onClick={() => navigate('/leaderboard')}>
+                <Button size="sm" variant="outline" className="h-10 justify-between border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10" onClick={() => navigate('/leaderboard')}>
                   Board <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-9 justify-between border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10" onClick={() => navigate('/profile')}>
+                <Button size="sm" variant="outline" className="h-10 justify-between border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10" onClick={() => navigate('/profile')}>
                   Profile <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-9 justify-between border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10" onClick={() => setActiveModal('create')}>
+                <Button size="sm" variant="outline" className="h-10 justify-between border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10" onClick={() => setActiveModal('create')}>
                   Create <Plus className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-9 justify-between border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10" onClick={() => setActiveModal('join')}>
+                <Button size="sm" variant="outline" className="h-10 justify-between border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10" onClick={() => setActiveModal('join')}>
                   Join <Hash className="h-3.5 w-3.5" />
                 </Button>
-                <Button size="sm" variant="outline" className="h-9 justify-between border-white/10 bg-white/5 px-3 text-xs hover:bg-white/10" onClick={() => scrollToSection(timerSectionRef)}>
-                  Focus <Timer className="h-3.5 w-3.5" />
+                <Button size="sm" variant="outline" className="h-10 justify-between border-white/10 bg-white/5 px-4 text-xs hover:bg-white/10" onClick={() => scrollToSection(timerSectionRef)}>
+                  Focus <Timer className="h-3.5 w-3.5 text-cyan-400" />
                 </Button>
               </div>
 
-              <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-3">
-                <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                  <div className="text-[11px] uppercase tracking-wider text-slate-500">Now</div>
-                  <div className="mt-1 truncate text-xs font-medium text-white">
+              <div className="mt-auto grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 pb-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Now</div>
+                  <div className="mt-2 truncate text-sm font-semibold text-white">
                     {priorityTasks[0]?.title || 'No urgent task'}
                   </div>
                 </div>
-                <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                  <div className="text-[11px] uppercase tracking-wider text-slate-500">Next Focus</div>
-                  <div className="mt-1 text-xs font-medium text-white">
+                <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 pb-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Next Focus</div>
+                  <div className="mt-2 truncate text-sm font-semibold text-white">
                     {nextSession ? `${nextSession.startsAt} - ${nextSession.title}` : 'Plan complete'}
                   </div>
                 </div>
-                <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                  <div className="text-[11px] uppercase tracking-wider text-slate-500">Recovery</div>
-                  <div className="mt-1 text-xs font-medium text-cyan-300">
-                    {streak.recoveryTokens}/{streak.totalTokens} tokens left
+                <div className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 pb-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Recovery</div>
+                  <div className="mt-2 text-sm font-semibold text-cyan-400">
+                    {streak.recoveryTokens} / {streak.totalTokens} tokens left
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md">
+            <div className="flex flex-col rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5">
               {/* Recent events are intentionally actionable (open task/timer/leaderboard). */}
-              <div className="mb-3 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-violet-300" />
-                <h3 className="text-sm font-semibold text-white">Recent Activity Feed</h3>
-              </div>
-              {profileLoading ? (
-                <div className="text-sm text-slate-500">Loading...</div>
-              ) : profile?.recentEvents?.length ? (
-                <div className="space-y-2">
-                  {profile.recentEvents.slice(0, 5).map((event) => (
-                    <div key={event._id} className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-slate-300">{reasonLabel[event.reason] || event.reason}</span>
-                        <span className="text-emerald-300">+{event.points} XP</span>
-                      </div>
-                      <div className="mt-2">
-                        {event.reason === 'task_resolved' ? (
-                          <button onClick={() => scrollToSection(questSectionRef)} className="text-[11px] text-cyan-300 hover:text-cyan-200">
-                            Open task board
-                          </button>
-                        ) : event.reason === 'pomodoro' ? (
-                          <button onClick={() => scrollToSection(timerSectionRef)} className="text-[11px] text-cyan-300 hover:text-cyan-200">
-                            Start next focus session
-                          </button>
-                        ) : (
-                          <button onClick={() => navigate('/leaderboard')} className="text-[11px] text-cyan-300 hover:text-cyan-200">
-                            Open leaderboard
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              <div className="mb-6 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white tracking-tight">Recent Activity</h3>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 ring-1 ring-violet-500/20">
+                  <Clock className="h-5 w-5 text-violet-400" />
                 </div>
-              ) : (
-                <div className="text-sm text-slate-500">No activity yet.</div>
-              )}
+              </div>
+              
+              <div className="flex-1 overflow-auto blend-scrollbar pr-1 relative mask-image-b">
+                {profileLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate-500" />
+                  </div>
+                ) : profile?.recentEvents?.length ? (
+                  <div className="space-y-3">
+                    {profile.recentEvents.slice(0, 5).map((event) => (
+                      <div key={event._id} className="rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3 transition-colors hover:bg-white/[0.04]">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-slate-300">{reasonLabel[event.reason] || event.reason}</span>
+                          <span className="text-sm font-bold text-emerald-400">+{event.points} XP</span>
+                        </div>
+                        <div className="mt-2">
+                          {event.reason === 'task_resolved' ? (
+                            <button onClick={() => scrollToSection(questSectionRef)} className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300">
+                              View task board
+                            </button>
+                          ) : event.reason === 'pomodoro' ? (
+                            <button onClick={() => scrollToSection(timerSectionRef)} className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300">
+                              Start next focus
+                            </button>
+                          ) : (
+                            <button onClick={() => navigate('/leaderboard')} className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300">
+                              View leaderboard
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-slate-500 italic mt-2">No activity yet. Logs will appear here.</div>
+                )}
+              </div>
             </div>
           </motion.section>
 
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.24 }}
-            className="grid grid-cols-1 gap-4 lg:grid-cols-4"
+            transition={{ duration: 0.5, delay: 0.4, ease: 'easeOut' }}
+            className="grid grid-cols-1 gap-6 lg:grid-cols-4"
           >
             {/* Week-over-week performance summary + milestone checkpoint. */}
-            <div className="lg:col-span-3 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="lg:col-span-3 grid grid-cols-1 gap-6 md:grid-cols-3">
               <TrendCard
                 title="XP Trend"
                 value={`${trendMetrics.xp.value} XP`}
@@ -1182,72 +1228,77 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 backdrop-blur-md">
-              <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
-                <Trophy className="h-4 w-4 text-amber-300" />
+            <div className="flex flex-col justify-center rounded-3xl border border-amber-500/30 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-[#0f172a]/80 to-[#0f172a]/80 p-8 shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-xl ring-1 ring-white/5 relative overflow-hidden">
+               <div className="absolute top-0 right-0 h-32 w-32 bg-amber-500/10 blur-3xl rounded-full"></div>
+              <div className="mb-4 flex items-center gap-3 text-base font-bold text-white relative z-10">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
+                  <Trophy className="h-5 w-5 text-amber-400" />
+                </div>
                 Milestone
               </div>
-              <div className="text-xs text-slate-400">{milestone.xp} XP {'->'} {milestone.next} XP</div>
-              <div className="mt-3 h-2 rounded-full bg-slate-800">
+              <div className="text-sm font-semibold tracking-wider text-slate-400 uppercase relative z-10">{milestone.xp} / {milestone.next} XP</div>
+              <div className="mt-4 h-2.5 rounded-full bg-slate-800/80 shadow-inner relative z-10">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300"
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-yellow-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
                   style={{ width: `${milestone.progress}%` }}
                 />
               </div>
-              <div className="mt-2 text-xs text-amber-200">{milestone.progress}% to next achievement</div>
+              <div className="mt-3 text-[11px] font-bold tracking-widest text-amber-400/80 uppercase relative z-10">{milestone.progress}% to next achievement</div>
             </div>
           </motion.section>
 
           <motion.section
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.26 }}
-            className="rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md"
+            transition={{ duration: 0.5, delay: 0.42, ease: 'easeOut' }}
+            className="rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5"
           >
             {/* Weak-topic radar highlights categories requiring corrective attention this week. */}
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white">Weak Topic Radar</h2>
-                <p className="text-sm text-slate-500">Accuracy trend this week by topic (task-completion proxy).</p>
+                <h2 className="text-xl font-bold text-white tracking-tight">Weak Topic Radar</h2>
+                <p className="mt-1 text-sm text-slate-400">Accuracy trend this week by topic (task-completion proxy).</p>
               </div>
-              <AlertTriangle className="h-5 w-5 text-amber-300" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 ring-1 ring-amber-500/20">
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {weakTopicRadar.map((item, idx) => (
                 <motion.div
                   key={item.topic}
-                  initial={{ opacity: 0, y: 8 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true, amount: 0.2 }}
-                  transition={{ duration: 0.2, delay: idx * 0.04 }}
-                  className={`rounded-xl border px-4 py-3 ${
-                    item.isWeak ? 'border-amber-500/30 bg-amber-500/10' : 'border-white/10 bg-white/5'
+                  transition={{ duration: 0.3, delay: idx * 0.05 }}
+                  className={`rounded-2xl border px-5 py-4 transition-all hover:bg-white/[0.04] ${
+                    item.isWeak ? 'border-amber-500/30 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'border-white/5 bg-white/[0.02]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-white">{item.topic}</div>
-                    <div className={`text-xs ${item.delta >= 0 ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    <div className="text-base font-bold text-white">{item.topic}</div>
+                    <div className={`rounded-full px-2.5 py-1 text-xs font-bold ${item.delta >= 0 ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' : 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20'}`}>
                       {item.delta >= 0 ? '+' : ''}{item.delta}%
                     </div>
                   </div>
 
-                  <div className="mt-2 text-xs text-slate-400">
-                    Accuracy: <span className="text-white font-medium">{item.currentAccuracy}%</span> this week
-                    {' '}({item.attempts} attempts)
+                  <div className="mt-3 flex items-baseline justify-between text-sm text-slate-400">
+                    <div>Accuracy: <span className="text-white font-bold">{item.currentAccuracy}%</span></div>
+                    <div className="text-xs uppercase tracking-wider text-slate-500">{item.attempts} attempts</div>
                   </div>
 
-                  <div className="mt-2 h-2 rounded-full bg-slate-800">
+                  <div className="mt-3 h-2 rounded-full bg-slate-800/80 shadow-inner">
                     <div
-                      className={`h-full rounded-full ${item.isWeak ? 'bg-gradient-to-r from-amber-500 to-yellow-300' : 'bg-gradient-to-r from-emerald-500 to-cyan-300'}`}
+                      className={`h-full rounded-full ${item.isWeak ? 'bg-gradient-to-r from-amber-500 to-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-gradient-to-r from-emerald-500 to-cyan-300 shadow-[0_0_8px_rgba(52,211,153,0.5)]'}`}
                       style={{ width: `${Math.min(100, item.currentAccuracy)}%` }}
                     />
                   </div>
 
                   {item.isWeak ? (
-                    <div className="mt-2 text-[11px] text-amber-200">Needs attention this week</div>
+                    <div className="mt-3 text-[11px] font-bold uppercase tracking-wider text-amber-400">Needs attention this week</div>
                   ) : (
-                    <div className="mt-2 text-[11px] text-slate-500">Stable trend</div>
+                    <div className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Stable trend</div>
                   )}
                 </motion.div>
               ))}
@@ -1256,24 +1307,13 @@ export default function Dashboard() {
 
           <motion.div
             ref={timerSectionRef}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="h-[520px] overflow-y-auto blend-scrollbar"
+            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
+            className="rounded-3xl border border-slate-700/50 bg-[#0f172a]/80 p-8 shadow-sm backdrop-blur-xl ring-1 ring-white/5"
           >
             {/* Execution panel: countdown + stopwatch. Wrapper is scrollable for small screens/content growth. */}
             <FocusTimer onSessionComplete={handleSessionComplete} />
-          </motion.div>
-
-          <motion.div
-            ref={questSectionRef}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.35 }}
-            className="h-[520px] overflow-y-auto blend-scrollbar"
-          >
-            {/* Task board panel: intentionally larger and scrollable to avoid clipping. */}
-            <QuestLog />
           </motion.div>
         </div>
       </SidebarLayout>
@@ -1302,4 +1342,5 @@ export default function Dashboard() {
     </>
   );
 }
+
 

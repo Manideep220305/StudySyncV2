@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthModal from './components/authModal';
+import Preloader from './components/ui/Preloader';
 import { Toaster } from './components/ui/toaster';
 import { AuthProvider } from './context/AuthContext';
+import { AiStatusProvider } from './context/AiStatusContext';
 import { SocketProvider } from './context/SocketContext';
 import Dashboard from './pages/Dashboard';
 import LandingPage from './pages/LandingPage';
@@ -32,9 +35,11 @@ function AppRoutes() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <SocketProvider>
-                <Dashboard />
-              </SocketProvider>
+              <AiStatusProvider>
+                <SocketProvider>
+                  <Dashboard />
+                </SocketProvider>
+              </AiStatusProvider>
             </ProtectedRoute>
           }
         />
@@ -43,9 +48,11 @@ function AppRoutes() {
           path="/rooms"
           element={
             <ProtectedRoute>
-              <SocketProvider>
-                <RoomsPage />
-              </SocketProvider>
+              <AiStatusProvider>
+                <SocketProvider>
+                  <RoomsPage />
+                </SocketProvider>
+              </AiStatusProvider>
             </ProtectedRoute>
           }
         />
@@ -54,9 +61,11 @@ function AppRoutes() {
           path="/leaderboard"
           element={
             <ProtectedRoute>
-              <SocketProvider>
-                <LeaderboardPage />
-              </SocketProvider>
+              <AiStatusProvider>
+                <SocketProvider>
+                  <LeaderboardPage />
+                </SocketProvider>
+              </AiStatusProvider>
             </ProtectedRoute>
           }
         />
@@ -65,7 +74,9 @@ function AppRoutes() {
           path="/profile"
           element={
             <ProtectedRoute>
-              <ProfilePage />
+              <AiStatusProvider>
+                <ProfilePage />
+              </AiStatusProvider>
             </ProtectedRoute>
           }
         />
@@ -80,12 +91,22 @@ function AppRoutes() {
 }
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
-    <AuthProvider>
-      <Router>
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <>
+      <AnimatePresence mode="wait">
+        {isLoading && <Preloader key="preloader" onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+
+      <div style={{ display: isLoading ? 'none' : 'block' }}>
+        <AuthProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </AuthProvider>
+      </div>
+    </>
   );
 }
 

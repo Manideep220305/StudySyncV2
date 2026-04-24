@@ -59,6 +59,14 @@ const startGroupQuiz = async (req, res) => {
       return res.status(404).json({ message: 'Group not found' });
     }
 
+    const membership = await Membership.findOne({
+      userId: req.user._id,
+      groupId,
+    });
+    if (!membership) {
+      return res.status(403).json({ message: 'Not a member of this group' });
+    }
+
     const session = startQuiz({
       groupId,
       joinCode: group.joinCode,
@@ -204,6 +212,14 @@ const endGroupQuiz = async (req, res) => {
     const { groupId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(groupId)) {
       return res.status(400).json({ message: 'Invalid groupId' });
+    }
+
+    const membership = await Membership.findOne({
+      userId: req.user._id,
+      groupId,
+    });
+    if (!membership) {
+      return res.status(403).json({ message: 'Not a member of this group' });
     }
 
     const group = await Group.findById(groupId).select('joinCode').lean();

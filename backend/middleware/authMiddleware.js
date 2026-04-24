@@ -35,11 +35,6 @@ const protect = async (req, res, next) => {
       // `.select('-password')` ensures the hashed password is never attached to req.user.
       req.user = await User.findById(decoded.id).select('-password');
 
-      // If the user ID in the token points to a deleted account, deny access.
-      if (!req.user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
-      }
-
       next(); // All good — proceed to the next middleware/controller
     } catch (error) {
       console.log(error);

@@ -55,32 +55,18 @@ type ConfirmAction =
   | { type: 'leave' };
 
 const panelClass =
-  'relative overflow-hidden rounded-2xl border border-cyan-300/10 bg-slate-900/60 backdrop-blur-md rooms-glass-pulse';
+  'relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.05] bg-[#0f172a] shadow-lg';
 
 const RailHandleIcon = () => (
   <div className="flex flex-col gap-[4px]" aria-hidden="true">
-    <span className="h-[2px] w-5 rounded-full bg-cyan-100/80" />
-    <span className="h-[2px] w-5 rounded-full bg-cyan-100/70" />
-    <span className="h-[2px] w-5 rounded-full bg-cyan-100/60" />
+    <span className="h-[2px] w-4 rounded-full bg-slate-600" />
+    <span className="h-[2px] w-4 rounded-full bg-slate-600/80" />
+    <span className="h-[2px] w-4 rounded-full bg-slate-600/60" />
   </div>
 );
 
 const AuroraLayer = () => (
-  <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden bg-[#020617]">
-    <div className="absolute inset-0 animate-neon-drift bg-[radial-gradient(circle_at_14%_20%,rgba(14,165,233,0.28),transparent_38%),radial-gradient(circle_at_84%_16%,rgba(59,130,246,0.24),transparent_34%),radial-gradient(circle_at_56%_82%,rgba(6,182,212,0.2),transparent_35%)]" />
-    <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(to_right,rgba(148,163,184,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:52px_52px]" />
-    <div
-      className="absolute inset-0 opacity-30 animate-wave-aurora"
-      style={{
-        backgroundImage: `linear-gradient(
-          to right,
-          transparent 0%, #172554 20%, #1e40af 40%, #2563eb 60%, #172554 80%, transparent 100%
-        )`,
-        backgroundSize: '200% 100%',
-        filter: 'blur(80px)',
-      }}
-    />
-  </div>
+  <div className="pointer-events-none fixed inset-0 z-[-1] overflow-hidden bg-[#0a0f18]" />
 );
 
 const PanelTexture = () => (
@@ -213,7 +199,11 @@ const CreateGroupModal = ({
         name: name.trim(),
         description: description.trim() || undefined,
       });
-      onCreated(created);
+      onCreated({
+        ...created,
+        role: 'leader',
+        memberCount: created.memberCount ?? 1,
+      });
       onClose();
       toast({ description: `Created ${created.name}` });
     } catch {
@@ -277,7 +267,10 @@ const JoinGroupModal = ({
     try {
       const response = await groupService.joinGroup(code.trim().toUpperCase());
       const joinedGroup = response.group ?? response;
-      onJoined(joinedGroup);
+      onJoined({
+        ...joinedGroup,
+        role: 'member',
+      });
       onClose();
       toast({ description: `Joined ${joinedGroup.name}` });
     } catch {
@@ -342,68 +335,72 @@ const LeftPanel = ({ groups, loading, selectedId, expanded, onExpandChange, onSe
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -8 }}
-          className="h-full"
+          className="h-full flex flex-col"
         >
-          <div className="relative border-b border-white/10 px-4 py-5">
-            <div className="mb-3 flex items-center gap-2">
+          <div className="relative border-b border-white/5 pb-5 px-5 pt-6">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-[0.35em] text-slate-400">Study Groups</p>
               <button
                 type="button"
                 onClick={() => onExpandChange(false)}
-                className="rounded-lg border border-cyan-300/20 bg-cyan-400/10 p-2 text-cyan-100 transition hover:bg-cyan-300/20"
+                className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-2 text-cyan-300 transition hover:bg-cyan-400/20 hover:scale-105"
                 aria-label="Collapse groups rail"
               >
                 <RailHandleIcon />
               </button>
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Study Groups</p>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search groups"
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-10 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-2xl border border-white/10 bg-black/40 px-10 py-3 text-sm font-medium text-white placeholder:text-slate-500 shadow-inner focus:border-cyan-500/50 focus:bg-black/60 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
-          <div className="relative flex-1 overflow-y-auto blend-scrollbar-nebula px-3 py-3 [scrollbar-gutter:stable]">
+          <div className="relative flex-1 overflow-y-auto blend-scrollbar-nebula px-4 py-4 [scrollbar-gutter:stable]">
             {loading ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {[1, 2, 3, 4].map((value) => (
-                  <div key={value} className="h-14 animate-pulse rounded-2xl bg-white/5" />
+                  <div key={value} className="h-16 animate-pulse rounded-2xl bg-white/[0.02] ring-1 ring-white/5" />
                 ))}
               </div>
             ) : filteredGroups.length === 0 ? (
               <div className="flex h-40 flex-col items-center justify-center text-center text-slate-500">
-                <Users className="mb-3 h-8 w-8 opacity-40" />
-                <p className="text-sm">No groups found</p>
+                <Users className="mb-3 h-8 w-8 opacity-40 text-slate-400" />
+                <p className="text-sm font-medium text-slate-300">No groups yet</p>
+                <p className="mt-1 max-w-[220px] text-xs leading-relaxed text-slate-500">
+                  Create one from the buttons below or join with a code to see chat, members, and files.
+                </p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {filteredGroups.map((group) => {
                   const isSelected = selectedId === group._id;
                   return (
                     <motion.button
                       key={group._id}
-                      whileHover={{ scale: 1.015, y: -1 }}
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                       onClick={() => onSelect(group)}
-                      className={`w-full rounded-2xl border px-3 py-3 text-left transition ${
+                      className={`w-full rounded-xl border px-3 py-3 text-left transition-all ${
                         isSelected
-                          ? 'border-blue-500/30 bg-blue-600/20'
-                          : 'border-transparent bg-white/5 hover:border-white/10 hover:bg-white/[0.08]'
+                          ? 'border-blue-500/50 bg-blue-900/40'
+                          : 'border-white/5 bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.04]'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-300'}`}>
+                      <div className="flex items-center gap-4">
+                        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-lg font-bold shadow-inner ${isSelected ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-blue-500/50' : 'bg-gradient-to-br from-slate-700 to-slate-800 text-slate-200'}`}>
                           {group.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="truncate text-sm font-semibold text-white">{group.name}</span>
-                            {group.role === 'leader' && <Crown className="h-3.5 w-3.5 text-yellow-400" />}
+                            <span className={`truncate text-[15px] font-bold ${isSelected ? 'text-white' : 'text-slate-200'}`}>{group.name}</span>
+                            {group.role === 'leader' && <Crown className="h-4 w-4 text-amber-400 drop-shadow-sm" />}
                           </div>
-                          <p className="text-[11px] capitalize text-slate-500">{group.role || 'member'}</p>
+                          <p className={`mt-0.5 text-[11px] font-medium uppercase tracking-wider ${isSelected ? 'text-blue-200/80' : 'text-slate-500'}`}>{group.role || 'member'}</p>
                         </div>
                       </div>
                     </motion.button>
@@ -413,16 +410,16 @@ const LeftPanel = ({ groups, loading, selectedId, expanded, onExpandChange, onSe
             )}
           </div>
 
-          <div className="relative border-t border-white/10 p-3">
-            <div className="flex gap-2">
-              <Button className="flex-1 bg-blue-600 text-white hover:bg-blue-500" size="sm" onClick={onCreate}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
+          <div className="relative border-t border-white/5 p-4 bg-black/20">
+            <div className="flex gap-3">
+              <Button className="flex-1 rounded-xl bg-blue-600 font-bold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-transform active:scale-[0.98]" size="default" onClick={onCreate}>
+                <Plus className="mr-2 h-4 w-4" />
                 Create
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                size="sm"
+                className="flex-1 rounded-xl border-white/10 bg-white/5 font-bold text-slate-300 shadow-md hover:bg-white/10 transition-transform active:scale-[0.98]"
+                size="default"
                 onClick={onJoin}
               >
                 Join
@@ -575,7 +572,7 @@ const InfoPanel = ({
                           </div>
 
                           {isLeader && !isCurrentUser && !memberIsLeader && (
-                            <div className="mt-3 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                            <div className="mt-3 flex gap-2">
                               <button
                                 onClick={() =>
                                   onAction({
@@ -870,78 +867,74 @@ export default function RoomsPage() {
                 initial={{ opacity: 0, x: 8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
-                className={`${panelClass} flex h-full w-[300px] flex-shrink-0 flex-col gap-3 overflow-y-auto rounded-none border-y-0 border-r-0 p-3 blend-scrollbar-nebula`}
+                className={`${panelClass} flex h-full w-[300px] flex-shrink-0 flex-col gap-3 overflow-y-auto rounded-none border-y-0 border-r-0 p-3 blend-scrollbar-nebula bg-[#0B0F19]`}
               >
-                <PanelTexture />
-
-                <motion.section
-                  whileHover={{ y: -2 }}
-                  className="relative flex-shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3.5"
-                >
-                  <div className="mb-3 flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-violet-400" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Focus Zone</p>
+                <div className="flex flex-col rounded-2xl border border-white/[0.05] bg-[#0F172A] p-5 transition-colors">
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
+                      <Clock3 className="h-4 w-4 text-violet-400" />
+                    </div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Focus Zone</p>
                   </div>
-                  <div className="mb-1 flex items-center justify-between">
-                    <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-[11px] font-semibold text-violet-300">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="rounded-md bg-violet-500/10 px-2 py-1 text-[10px] font-bold tracking-wider text-violet-300">
                       Pomodoro
                     </span>
-                    <span className="text-[11px] text-slate-500">{timerPhase === 'focus' ? 'Focus' : 'Break'}</span>
+                    <span className="text-[10px] font-semibold tracking-widest uppercase text-slate-500">{timerPhase === 'focus' ? 'Focus' : 'Break'}</span>
                   </div>
-                  <div className="mt-3 text-center text-[2rem] font-mono text-white">{formatTime(secondsLeft)}</div>
-                  <div className="mt-3 flex gap-2">
-                    <Button className="flex-1 bg-violet-600 text-white hover:bg-violet-500" size="sm" onClick={() => setIsTimerRunning(true)}>
+                  <div className="mt-4 text-center text-[2.5rem] font-bold tracking-tight text-white">{formatTime(secondsLeft)}</div>
+                  <div className="mt-5 flex gap-2">
+                    <Button className="flex-1 rounded-lg bg-violet-600 font-semibold text-white hover:bg-violet-500 h-9" onClick={() => setIsTimerRunning(true)}>
                       Start
                     </Button>
                     <Button
                       variant="outline"
-                      className="flex-1 border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                      size="sm"
+                      className="flex-1 border-white/[0.05] bg-white/5 rounded-lg font-semibold text-slate-300 hover:bg-white/10 h-9"
                       onClick={() => setIsTimerRunning(false)}
                     >
                       Pause
                     </Button>
                   </div>
-                </motion.section>
+                </div>
 
-                <motion.section
-                  whileHover={{ y: -2 }}
-                  className="relative flex-shrink-0 rounded-2xl border border-white/10 bg-white/5 p-3.5"
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Active Quests</p>
-                    <button onClick={() => navigate('/dashboard?focus=quests')} className="text-xs font-semibold text-blue-300 transition hover:text-blue-200">
+                <div className="flex flex-col rounded-2xl border border-white/[0.05] bg-[#0F172A] p-5 transition-colors">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Active Quests</p>
+                    </div>
+                    <button onClick={() => navigate('/dashboard?focus=quests')} className="text-[10px] font-bold uppercase tracking-wider text-cyan-400 transition hover:text-cyan-300">
                       View all
                     </button>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-2">
                     {tasks.length === 0 ? (
-                      <p className="text-sm text-slate-500">No active quests</p>
+                      <div className="rounded-lg border border-dashed border-white/5 py-4 text-center text-xs font-medium text-slate-500">No active quests</div>
                     ) : (
                       tasks.map((task) => (
                         <button
                           key={task._id}
                           onClick={() => handleTaskToggle(task)}
-                          className="flex w-full items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2 text-left transition hover:bg-white/5"
+                          className="flex w-full items-center gap-3 rounded-lg border border-transparent bg-white/[0.02] px-3 py-2 text-left transition hover:bg-white/[0.04]"
                         >
-                          <Circle className="h-4 w-4 text-amber-300" />
-                          <span className="truncate text-sm text-slate-200">{task.title}</span>
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/10">
+                            <Circle className="h-2.5 w-2.5 text-amber-400" />
+                          </div>
+                          <span className="truncate text-sm font-medium text-slate-300">{task.title}</span>
                         </button>
                       ))
                     )}
                   </div>
-                </motion.section>
+                </div>
 
                 {selectedGroup && (
-                  <motion.section
-                    whileHover={{ y: -2 }}
-                    className="relative flex min-h-0 flex-1 flex-col rounded-2xl border border-white/10 bg-white/5 p-3.5"
-                  >
-                    <div className="mb-3 flex items-center gap-2">
-                      <Target className="h-4 w-4 text-amber-300" />
-                      <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Group Goals</p>
+                  <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-white/[0.05] bg-[#0F172A] p-5 transition-colors">
+                    <div className="mb-4 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/10">
+                        <Target className="h-4 w-4 text-orange-400" />
+                      </div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">Group Goals</p>
                     </div>
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto blend-scrollbar-nebula pr-1">
+                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto blend-scrollbar-nebula pr-1 mt-1">
                       {goals.map((goal) => (
                         <button
                           key={goal.id}
@@ -950,18 +943,22 @@ export default function RoomsPage() {
                               current.map((item) => (item.id === goal.id ? { ...item, done: !item.done } : item))
                             )
                           }
-                          className="flex w-full items-start gap-2 rounded-2xl border border-white/10 bg-slate-950/40 px-3 py-2 text-left"
+                          className={`flex w-full items-start gap-3 rounded-lg border px-3 py-2 text-left transition ${goal.done ? 'border-emerald-500/10 bg-emerald-500/5 hover:bg-emerald-500/10' : 'border-transparent bg-white/[0.02] hover:bg-white/[0.04]'}`}
                         >
                           {goal.done ? (
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 text-green-400" />
+                            <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
+                              <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                            </div>
                           ) : (
-                            <Circle className="mt-0.5 h-4 w-4 text-slate-500" />
+                            <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/5">
+                              <Circle className="h-3 w-3 text-slate-400" />
+                            </div>
                           )}
-                          <span className={`text-sm ${goal.done ? 'text-slate-500 line-through' : 'text-slate-200'}`}>{goal.text}</span>
+                          <span className={`text-sm font-medium ${goal.done ? 'text-slate-500 line-through' : 'text-slate-300'}`}>{goal.text}</span>
                         </button>
                       ))}
                     </div>
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-4 flex gap-2">
                       <input
                         value={goalInput}
                         onChange={(event) => setGoalInput(event.target.value)}
@@ -972,13 +969,13 @@ export default function RoomsPage() {
                           }
                         }}
                         placeholder="Add a shared goal"
-                        className="flex-1 rounded-2xl border border-white/10 bg-slate-950/70 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                        className="flex-1 rounded-lg border border-white/[0.05] bg-black/20 px-3 py-2 text-sm font-medium text-white placeholder:text-slate-500 focus:border-amber-500/30 focus:outline-none transition-colors"
                       />
-                      <Button className="bg-amber-500 text-slate-950 hover:bg-amber-400" size="sm" onClick={handleAddGoal}>
+                      <Button className="rounded-lg bg-orange-600 px-4 font-semibold text-white hover:bg-orange-500 transition-colors h-9" onClick={handleAddGoal}>
                         Add
                       </Button>
                     </div>
-                  </motion.section>
+                  </div>
                 )}
               </motion.aside>
             </div>

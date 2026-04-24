@@ -11,6 +11,7 @@ const authRoutes = require('./routes/authRoutes');
 const { requestLogger } = require('./middleware/requestLogger');
 const { responseEnvelope } = require('./middleware/responseEnvelope');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const { getAiServiceStatus } = require('./services/aiHealthService');
 
 const app = express();
 
@@ -28,13 +29,39 @@ const parseOrigins = () => {
   return ['http://localhost:5173', 'http://localhost:5174'];
 };
 
+const isLocalDevOrigin = (origin) => {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+};
+
+const createCorsOriginValidator = () => {
+  const allowedOrigins = new Set(parseOrigins());
+  const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+
+  return (origin, callback) => {
+    // Allow non-browser and same-origin requests where `Origin` may be missing.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+
+    if (isDev && isLocalDevOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS origin not allowed: ${origin}`));
+  };
+};
+
 // --- Middleware ---
 // CORS: Allows requests from the Vite frontend dev server.
 // `credentials: true` is REQUIRED for the browser to send and receive httpOnly cookies.
 // Without this, all auth would silently fail — the cookie would never be sent.
 app.use(
   cors({
-    origin: parseOrigins(),
+    origin: createCorsOriginValidator(),
     credentials: true, // Allow cookies (needed for JWT auth)
   })
 );
@@ -83,6 +110,7 @@ app.get('/health', (req, res) => {
     dependencies: {
       mongo: dbStateMap[dbState] || 'unknown',
       socketNamespace: Boolean(app.locals.socketInitialized),
+      ai: getAiServiceStatus(),
     },
     ts: new Date().toISOString(),
   });

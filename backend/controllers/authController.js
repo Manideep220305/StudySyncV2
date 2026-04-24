@@ -9,6 +9,17 @@ const generateToken = (id) => {
     });
 };
 
+const getAuthCookieOptions = (overrides = {}) => {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' : 'lax',
+        ...overrides,
+    };
+};
+
 // --- REGISTER USER ---
 const registerUser = async (req, res) => {
     try {
@@ -31,12 +42,9 @@ const registerUser = async (req, res) => {
         const token = generateToken(user._id);
 
         // 4. Send Token in HTTP-Only Cookie
-        res.cookie('jwt', token, {
-            httpOnly: true, // Prevents client-side JS from accessing the cookie
-            secure: process.env.NODE_ENV === 'production', // Only sends over HTTPS in production
-            sameSite: 'strict', // Prevents CSRF attacks
+        res.cookie('jwt', token, getAuthCookieOptions({
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
-        });
+        }));
 
         // 5. Send Response (excluding password)
         res.status(201).json({
@@ -68,12 +76,9 @@ const loginUser = async (req, res) => {
             const token = generateToken(user._id);
 
             // 4. Send Token in HTTP-Only Cookie
-            res.cookie('jwt', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+            res.cookie('jwt', token, getAuthCookieOptions({
                 maxAge: 30 * 24 * 60 * 60 * 1000,
-            });
+            }));
 
             res.json({
                 _id: user._id,
@@ -94,10 +99,9 @@ const loginUser = async (req, res) => {
 const logoutUser = (req, res) => {
     // To logout, we simply clear the cookie by setting it to an empty string 
     // and expiring it immediately.
-    res.cookie('jwt', '', {
-        httpOnly: true,
+    res.cookie('jwt', '', getAuthCookieOptions({
         expires: new Date(0),
-    });
+    }));
 
     res.status(200).json({ message: 'Logged out successfully' });
 };

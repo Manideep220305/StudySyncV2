@@ -11,6 +11,27 @@ const SOCKET_ORIGINS = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || 'h
   .split(',')
   .map((value) => value.trim())
   .filter(Boolean);
+
+const isLocalDevOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+
+const socketOriginValidator = (origin, callback) => {
+  const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+  const allowedOrigins = new Set(SOCKET_ORIGINS);
+
+  if (!origin) {
+    return callback(null, true);
+  }
+
+  if (allowedOrigins.has(origin)) {
+    return callback(null, true);
+  }
+
+  if (isDev && isLocalDevOrigin(origin)) {
+    return callback(null, true);
+  }
+
+  return callback(new Error(`Socket origin not allowed: ${origin}`));
+};
 let studyNamespaceRef = null;
 
 const eventLimiterStore = new Map();
@@ -28,7 +49,7 @@ const isEventLimited = (socket, eventName, maxEvents, windowMs) => {
 const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: SOCKET_ORIGINS,
+      origin: socketOriginValidator,
       credentials: true,
     },
   });

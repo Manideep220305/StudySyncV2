@@ -5,6 +5,7 @@ const logger = require('../utils/logger');
 const { createHttpError } = require('../middleware/errorMiddleware');
 const { startQuizWithQuestions } = require('../services/quizSessionService');
 const { getStudyNamespace } = require('../socket');
+const { refreshAiServiceStatus } = require('../services/aiHealthService');
 
 const FASTAPI_BASE_URL = (process.env.FASTAPI_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
@@ -21,6 +22,19 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 120000) => {
   } finally {
     clearTimeout(timeout);
   }
+};
+
+const normalizeProxyError = (error, fallbackMessage) => {
+  if (error?.status) {
+    return error;
+  }
+
+  if (error?.name === 'AbortError') {
+    return createHttpError(504, 'AI_SERVICE_TIMEOUT', 'AI service timed out');
+  }
+
+  const message = error?.cause?.message || error?.message || fallbackMessage;
+  return createHttpError(502, 'AI_PROXY_ERROR', message);
 };
 
 const parseJsonSafe = async (response) => {
@@ -91,8 +105,9 @@ const uploadPdfToAi = async (req, res, next) => {
       message: error.message,
       code: error.code,
       status: error.status,
+      cause: error?.cause?.message,
     });
-    return next(error);
+    return next(normalizeProxyError(error, 'Failed to upload PDF to AI service'));
   }
 };
 
@@ -158,8 +173,9 @@ const generateQuizFromAi = async (req, res, next) => {
       message: error.message,
       code: error.code,
       status: error.status,
+      cause: error?.cause?.message,
     });
-    return next(error);
+    return next(normalizeProxyError(error, 'Failed to generate quiz from AI service'));
   }
 };
 
@@ -186,21 +202,18 @@ const askAi = async (req, res, next) => {
       message: error.message,
       code: error.code,
       status: error.status,
+      cause: error?.cause?.message,
     });
-    return next(error);
+    return next(normalizeProxyError(error, 'Failed to fetch answer from AI service'));
   }
 };
 
 const aiHealth = async (req, res, next) => {
   try {
-    const response = await fetchWithTimeout(`${FASTAPI_BASE_URL}/health`, { method: 'GET' }, 10000);
-    if (!response.ok) {
-      throw await mapFastApiError(response, 'AI health check failed');
-    }
-    const payload = await parseJsonSafe(response);
-    return res.status(200).json(payload);
+    const status = await refreshAiServiceStatus({ timeoutMs: 10000 });
+    return res.status(200).json(status);
   } catch (error) {
-    return next(error);
+    return next(normalizeProxyError(error, 'AI health check failed'));
   }
 };
 

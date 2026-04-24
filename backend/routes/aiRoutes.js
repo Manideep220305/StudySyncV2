@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
-const { protect, requireRole } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
+const { createHttpError } = require('../middleware/errorMiddleware');
 const {
   uploadPdfToAi,
   generateQuizFromAi,
@@ -21,15 +22,28 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+const uploadSinglePdf = (req, res, next) => {
+  upload.single('file')(req, res, (error) => {
+    if (!error) {
+      return next();
+    }
+
+    if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+      return next(createHttpError(400, 'FILE_TOO_LARGE', 'PDF exceeds 10MB limit'));
+    }
+
+    return next(error);
+  });
+};
+
 router.get('/health', protect, aiHealth);
 
 router.post(
   '/upload-pdf',
   protect,
-  upload.single('file'),
+  uploadSinglePdf,
   aiUploadRules,
   validate,
-  requireRole('leader'),
   uploadPdfToAi
 );
 
@@ -38,7 +52,6 @@ router.post(
   protect,
   aiGenerateQuizRules,
   validate,
-  requireRole('leader'),
   generateQuizFromAi
 );
 

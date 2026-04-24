@@ -511,7 +511,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onSessionComplete }) => (
   <div className="grid h-full grid-cols-1 overflow-hidden rounded-2xl border border-white/10 md:grid-cols-2">
 
     {/* LEFT — Countdown timer (Pomodoro / Custom) */}
-    <div className="relative flex flex-col border-b border-white/10 bg-slate-900/60 p-6 backdrop-blur-md md:border-b-0 md:border-r overflow-y-auto blend-scrollbar">
+    <div className="relative flex flex-col border-b border-white/10 bg-slate-900 border-r border-white-[0.05] p-6 md:border-b-0 md:border-r overflow-y-auto blend-scrollbar">
       {/* Blue accent bar */}
       <div className="absolute inset-x-0 top-0 h-[2px] rounded-tl-2xl bg-gradient-to-r from-blue-500 to-cyan-400" />
       <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-slate-500">Focus Timer</p>
@@ -519,7 +519,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({ onSessionComplete }) => (
     </div>
 
     {/* RIGHT — Stopwatch */}
-    <div className="relative flex flex-col bg-slate-900/60 p-6 backdrop-blur-md overflow-y-auto blend-scrollbar">
+    <div className="relative flex flex-col bg-slate-900 border-r border-white-[0.05] p-6 overflow-y-auto blend-scrollbar">
       {/* Violet accent bar */}
       <div className="absolute inset-x-0 top-0 h-[2px] rounded-tr-2xl bg-gradient-to-r from-violet-500 to-purple-400" />
       <StopwatchPanel />

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 
-const { protect, requireRole } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 const {
   startGroupQuiz,
   getCurrentGroupQuiz,
@@ -15,8 +15,8 @@ const {
   quizAnswerRules,
 } = require('../middleware/validationMiddleware');
 
-// Leader starts quiz for the group
-router.post('/start', protect, quizStartRules, validate, requireRole('leader'), startGroupQuiz);
+// Any group member can start quiz for the group
+router.post('/start', protect, quizStartRules, validate, startGroupQuiz);
 
 // Members can read the active quiz snapshot
 router.get('/current', protect, groupIdParamRules, validate, getCurrentGroupQuiz);
@@ -24,7 +24,7 @@ router.get('/current', protect, groupIdParamRules, validate, getCurrentGroupQuiz
 // Members submit answers
 router.post('/answer', protect, quizAnswerRules, validate, answerGroupQuiz);
 
-// Leader can force-end a quiz to clear stuck sessions
-router.post('/end', protect, groupIdParamRules, validate, requireRole('leader'), endGroupQuiz);
+// Any group member can force-end a quiz to clear stuck sessions
+router.post('/end', protect, groupIdParamRules, validate, endGroupQuiz);
 
 module.exports = router;
